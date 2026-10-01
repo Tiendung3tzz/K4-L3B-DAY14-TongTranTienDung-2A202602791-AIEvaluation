@@ -30,11 +30,11 @@ critical.
 
 | Metric | Acceptable Low Score Scenario | Critical Low Score Scenario | Action Required |
 |---|---|---|---|
-| Faithfulness | | | |
-| Answer Relevance | | | |
-| Context Recall | | | |
-| Context Precision | | | |
-| Completeness | | | |
+| Faithfulness | Câu trả lời chỉ xin làm rõ hoặc từ chối trả lời câu hỏi ngoài phạm vi, nên không cần đưa ra nhiều thông tin từ context. | Câu trả lời khẳng định chính sách, giá hoặc điều kiện bảo hành mà tài liệu được truy xuất không hỗ trợ. | Đối chiếu từng khẳng định với nguồn; sửa retrieval hoặc yêu cầu hệ thống chỉ trả lời khi có bằng chứng. |
+| Answer Relevance | Câu hỏi mơ hồ; hệ thống hỏi thêm thông tin cần thiết thay vì đoán ý người dùng. | Người dùng hỏi về đổi trả nhưng câu trả lời lại nói về giao hàng hoặc chủ đề khác. | Kiểm tra cách hiểu câu hỏi, prompt và khả năng chuyển đúng chủ đề. |
+| Context Recall | Câu hỏi nằm ngoài corpus và đáp án đúng là thông báo không đủ thông tin. | Tài liệu có câu trả lời nhưng retriever bỏ sót phần bằng chứng thiết yếu. | Kiểm tra truy vấn, cách chia chunk và phạm vi tài liệu được tìm kiếm. |
+| Context Precision | Chunk chứa bằng chứng đúng đã ở đầu danh sách, nhưng có thêm vài chunk ít liên quan ở phía sau. | Các chunk đầu đều không liên quan, đẩy bằng chứng cần thiết xuống thấp hoặc ra khỏi kết quả. | Kiểm tra thứ tự xếp hạng, loại chunk nhiễu và cân nhắc reranking. |
+| Completeness | Người dùng chỉ cần câu trả lời ngắn, còn đáp án tham chiếu chứa nhiều chi tiết không cần cho yêu cầu đó. | Câu trả lời bỏ qua điều kiện hoặc bước quan trọng, khiến người dùng thực hiện sai chính sách. | So sánh với các ý bắt buộc trong đáp án tham chiếu; bổ sung những ý còn thiếu và kiểm tra lại. |
 
 ### Exercise 1.2 — Bias trong LLM-as-a-Judge
 
@@ -46,15 +46,15 @@ Ba bias thường gặp:
 
 **Câu 1: Thiết kế experiment phát hiện position bias với ít nhất hai conditions.**
 
-> *Câu trả lời:*
+Chọn cùng một câu hỏi và hai câu trả lời A, B. Ở condition 1, đưa A trước B; ở condition 2, đưa B trước A. Giữ nguyên nội dung, rubric và judge, chỉ đổi thứ tự trình bày. Lặp lại với nhiều cặp câu trả lời và ghi điểm hoặc lựa chọn của judge. Nếu judge thường ưu tiên câu trả lời đứng đầu, hoặc đổi lựa chọn khi đảo thứ tự dù nội dung không đổi, đó là dấu hiệu position bias.
 
 **Câu 2: Làm thế nào giảm verbosity bias bằng rubric design?**
 
-> *Câu trả lời:*
+Rubric cần chấm theo các ý bắt buộc: độ đúng, mức độ trả lời trúng câu hỏi, bằng chứng và các bước hành động cần thiết. Nêu rõ câu dài không được cộng điểm chỉ vì có nhiều chữ; thông tin lặp, lan man hoặc không liên quan cũng không được tính là đầy đủ hơn. Có thể yêu cầu judge chỉ ra bằng chứng cụ thể cho từng mức điểm.
 
 **Câu 3: Tại sao cần calibrate LLM judge với human labels?**
 
-> *Câu trả lời:*
+Điểm của LLM judge có thể chịu ảnh hưởng bởi thứ tự, độ dài câu trả lời hoặc cách diễn đạt. So sánh điểm judge với nhãn do người chấm theo cùng rubric giúp phát hiện sự lệch điểm và những loại câu trả lời judge thường chấm sai. Sau đó có thể điều chỉnh rubric, ngưỡng điểm hoặc cách trình bày đầu vào trước khi dùng judge để đánh giá tự động.
 
 ### Exercise 1.3 — Evaluation trong CI/CD
 
@@ -62,13 +62,17 @@ Ba bias thường gặp:
 
 | Metric | Threshold | Lý do |
 |---|---:|---|
-| Faithfulness | | |
-| Answer Relevance | | |
-| Completeness | | |
+| Faithfulness | 0.8 | Câu trả lời hỗ trợ khách hàng phải dựa trên bằng chứng; thông tin không có nguồn có thể dẫn đến hướng dẫn sai. |
+| Answer Relevance | 0.7 | Câu trả lời phải giải quyết đúng vấn đề người dùng hỏi, đồng thời cho phép một số câu trả lời cần hỏi lại để làm rõ. |
+| Completeness | 0.8 | Câu trả lời cần bao phủ các điều kiện và bước quan trọng, nhất là với đổi trả, thanh toán và bảo hành. |
 
 **Câu 2: Khi nào dùng offline evaluation, online evaluation và human review?**
 
-> *Câu trả lời:*
+Offline evaluation: Dùng trước khi phát hành hoặc sau khi thay đổi model, prompt, retrieval hay dữ liệu. Chạy trên golden dataset cố định để so sánh với baseline và phát hiện regression.
+
+Online evaluation: Dùng sau khi phát hành để theo dõi câu hỏi và kết quả thực tế, phát hiện thay đổi về nhu cầu người dùng hoặc chất lượng theo thời gian.
+
+Human review: Dùng cho câu trả lời có rủi ro cao, trường hợp các metric bất đồng, kết quả sát ngưỡng hoặc những lỗi mà điểm tự động không giải thích rõ. Nhãn của người chấm cũng giúp hiệu chỉnh bộ đánh giá tự động.
 
 ---
 
