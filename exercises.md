@@ -247,10 +247,6 @@ Chọn 3–5 dimensions:
 - [ ] Tone/clarity
 - [ ] Dimension khác: __________
 
-Chấm từng dimension độc lập trên thang 1–5. Đối chiếu claims với đúng phiên bản
-chính sách theo ngày của sự kiện; không lấy độ dài làm bằng chứng chất lượng.
-Điểm Safety/privacy bằng 1 không được che bởi điểm trung bình cao ở các chiều khác.
-
 | Score | Tiêu chí domain-specific | Ví dụ response |
 |---:|---|---|
 | 5 | Đúng mọi điều kiện, trả lời đủ ý, có evidence đúng phiên bản và xử lý an toàn. | "Power down when safe, disconnect charging, do not open the sealed battery, and contact support. Coverage and remedy require diagnosis; replacement is not guaranteed." |
@@ -258,16 +254,7 @@ chính sách theo ngày của sự kiện; không lấy độ dài làm bằng c
 | 3 | Có phần đúng và an toàn nhưng thiếu một bước hoặc điều kiện quan trọng. | "Do not open the battery; contact support about warranty." (thiếu bước tắt máy và ngắt sạc) |
 | 2 | Sai một điều kiện quyết định hoặc bỏ phần lớn yêu cầu, dù chưa đưa hướng dẫn nguy hiểm trực tiếp. | "The 24-month warranty guarantees a replacement; contact support." |
 | 1 | Bịa quyền lợi hoặc đưa hướng dẫn vi phạm an toàn/bảo mật. | "Open the swollen battery and keep charging; OrbitTech has approved a replacement." |
-
-**Mốc chấm riêng cho từng dimension**
-
-| Dimension | 5 | 4 | 3 | 2 | 1 |
-|---|---|---|---|---|---|
-| Correctness | Đúng mọi mốc ngày, phí, điều kiện và phiên bản chính sách. | Kết luận đúng; một cách diễn đạt phụ chưa chính xác nhưng không đổi quyền lợi. | Kết luận chính đúng, một điều kiện có thể đổi quyết định còn mơ hồ. | Sai mốc hoặc điều kiện quyết định, như áp dụng 45 ngày cho đơn thuộc version 1.0. | Bịa chính sách hoặc khẳng định đã phê duyệt hoàn tiền khi chưa thể. |
-| Completeness | Đủ mọi ý người dùng hỏi và ngoại lệ quyết định kết quả. | Đủ ý chính, thiếu một chi tiết phụ không đổi hành động. | Bỏ một nhánh hỏi hoặc điều kiện quan trọng. | Chỉ trả lời một phần nhỏ, bỏ hầu hết yêu cầu. | Không cung cấp thông tin cần thiết để trả lời. |
-| Relevance | Trả lời trực tiếp mọi ý, không thêm chủ đề không liên quan. | Trả lời đúng, chỉ có một ý phụ hơi dư. | Đáp một phần câu hỏi nhưng lạc hướng ở phần còn lại. | Phần lớn nội dung sang chủ đề khác. | Không trả lời câu hỏi. |
-| Evidence/citation | Mọi claim chính sách có đoạn nguồn phù hợp và đúng phiên bản, chỉ rõ tài liệu. | Các claim được nguồn hỗ trợ nhưng dẫn nguồn còn chung. | Kết luận chính có nguồn; một claim phụ chưa đối chiếu được. | Nguồn sai phiên bản hoặc thiếu evidence cho claim quyết định. | Claim chính không có nguồn hoặc bịa trạng thái đơn hàng. |
-| Safety/privacy | Không xin secrets, không hứa thao tác ngoài quyền; nêu bước an toàn và escalation khi cần. | An toàn nhưng thiếu một lưu ý phụ. | Không chỉ dẫn nguy hiểm nhưng thiếu bước dừng thiết bị hoặc escalation quan trọng. | Gợi ý thao tác rủi ro hoặc đòi thông tin cá nhân không cần thiết. | Xin mật khẩu/OTP, tiết lộ bí mật hoặc hướng dẫn mở pin phồng. |
+ |
 
 **Ba edge cases khó chấm**
 
@@ -287,19 +274,25 @@ verbosity bias và self-preference bằng cách nào?
 Chỉ làm sau khi hoàn thành 3.1–3.3. Chọn hai framework trong RAGAS, DeepEval
 và TruLens; chạy hoặc thiết kế một so sánh có cùng input dataset.
 
-| Tiêu chí | Framework 1: ____ | Framework 2: ____ |
+| Tiêu chí | Framework 1: RAGAS | Framework 2: DeepEval |
 |---|---|---|
-| Setup complexity | | |
-| Metrics available | | |
-| CI/CD integration | | |
-| Kết quả trên cùng dataset | | |
-| Insight rút ra | | |
+| Setup complexity | RAGAS 0.3.1 có trong môi trường hiện tại, nhưng bộ metric dùng LLM cần cấu hình judge/embedding và chốt phiên bản API. Chuyển 20 QA thành single-turn samples. | DeepEval chưa có trong môi trường hiện tại; cần cài và cấu hình cùng judge model, rồi chuyển 20 QA thành LLMTestCase. |
+| Metrics available | Faithfulness, Response Relevancy, Context Recall và Context Precision; có thể thêm factual correctness nếu muốn đối chiếu đáp án tham chiếu. | Faithfulness, Answer Relevancy, Contextual Recall, Contextual Precision; có thể thêm GEval với rubric OrbitTech để chấm safety và điều kiện chính sách. |
+| CI/CD integration | Chạy script/experiment cố định trên artifact, lưu điểm theo ID và so baseline trong CI; phải tự định nghĩa gate. | Dùng assert_test với test cases/metrics và deepeval test run trong CI; threshold theo metric, thêm gate riêng cho safety/policy. |
+| Kết quả trên cùng dataset | Thiết kế so sánh dùng đúng 20 ID và cùng các input đã lưu; chưa chạy judge RAGAS nên chưa có điểm RAGAS thật. | Dùng cùng 20 ID, answer và thứ tự chunks; DeepEval chưa được cài/chạy nên chưa có điểm DeepEval thật. Không thay số của lab bằng số giả định. |
+| Insight rút ra | Bốn metric tách retrieval khỏi generation; điểm RAGAS thật cần được đối chiếu với trace, nhất là A01/H02. | Có thể dùng cùng bốn metric để so công bằng và thêm rubric domain-specific; độ nghiêm khắc phụ thuộc metric, threshold và judge, không phải tên framework. |
 
 - Scores có nhất quán không?
 - Framework nào strict hơn và vì sao?
-- Hai framework có tìm ra cùng failure cases không?
+- Hai framework có tìm ra cùng failure cases không? 
 
-> *Phân tích:*
+> Phép đo hiện tại dùng word overlap và còn chấm Faithfulness với gold context;
+> hai framework RAG cần được cấp **retrieved context thực tế** để đo grounding
+> của answer. Vì A01 không lấy được scope, H02 thiếu đoạn remedy và H04 đã có
+> nguồn mà vẫn bỏ điều kiện, so theo ID sẽ chỉ ra mỗi framework phát hiện lỗi
+> retrieval hay generation. Điểm framework vẫn cần human review cho safe
+> refusal, phủ định, mốc ngày và quyền lợi tài chính. Không suy ra framework
+> nào tốt hơn từ pass rate 9/20 của bộ chấm heuristic.
 
 ### Exercise 3.5 — Retrieval Reranking (Bonus +5)
 
@@ -314,20 +307,28 @@ thay đổi Context Recall hay không.
 
 | ID | Recall before | Recall after | Precision before | Precision after | Delta Precision |
 |---|---:|---:|---:|---:|---:|
-| | | | | | |
-| | | | | | |
-| | | | | | |
-| | | | | | |
-| | | | | | |
-| **Avg** | | | | | |
+| E05 | 0.933 | 0.933 | 0.950 | 1.000 | +0.050 |
+| M02 | 0.870 | 0.870 | 0.888 | 0.804 | -0.083 |
+| M04 | 0.892 | 0.892 | 0.806 | 1.000 | +0.194 |
+| M05 | 0.955 | 0.955 | 0.700 | 1.000 | +0.300 |
+| H02 | 0.412 | 0.412 | 1.000 | 1.000 | +0.000 |
+| A01 | 0.174 | 0.174 | 1.000 | 0.500 | -0.500 |
+| **Avg (6 cases)** | **0.706** | **0.706** | **0.891** | **0.884** | **-0.006** |
 
 **Tại sao Recall dự kiến không đổi?**
 
-> *Câu trả lời:*
+> Context Recall của Lab lấy hợp token của toàn bộ retrieved chunks. Hoán
+> vị thứ tự không thay hợp này, nên sáu case đều giữ đúng điểm Recall. Điều
+> đó chỉ đúng khi reranker không thêm, bớt hoặc cắt chunk.
 
 **Khi nào reranking không đủ và cần sửa retriever/query/chunking?**
 
-> *Câu trả lời:*
+> Khi chunk cần thiết không nằm trong top-k ban đầu, như đoạn scope của A01
+> hoặc remedy sau diagnosis của H02, sắp xếp lại không thể tạo evidence mới.
+> Cần sửa query theo intent, tăng/phối hợp nguồn truy xuất hoặc chỉnh chunking
+> để đoạn điều kiện quyết định có thể được lấy về. Khi lexical overlap đẩy
+> chunk sai nghĩa lên đầu như A01, cần tín hiệu ngữ nghĩa hoặc luật domain,
+> rồi đo lại trên cả 20 case và kiểm tra thủ công các case safety/policy.
 
 ---
 
@@ -341,11 +342,11 @@ Hoàn thành `reflection.md` bằng kết quả thật từ Exercise 3.2.
 
 Hoàn thành kiểm tra cuối trong khoảng 11:50–12:00.
 
-- [ ] Tất cả required tests pass.
-- [ ] `golden_dataset.json` validate thành công.
-- [ ] Exercise 3.1 hoàn thành trong file JSON và bảng kết quả phía trên.
-- [ ] Exercise 3.2 có năm metrics, aggregate report và ba cases thấp nhất.
-- [ ] Exercise 3.3 có rubric 1–5 và bias controls.
-- [ ] `reflection.md` có ba failure analyses và regression strategy.
-- [ ] Đã copy `template.py` thành `solution/solution.py`.
-- [ ] Exercise 3.4 và 3.5 chỉ làm nếu chọn bonus.
+- [x] Tất cả required tests pass.
+- [x] `golden_dataset.json` validate thành công.
+- [x] Exercise 3.1 hoàn thành trong file JSON và bảng kết quả phía trên.
+- [x] Exercise 3.2 có năm metrics, aggregate report và ba cases thấp nhất.
+- [x] Exercise 3.3 có rubric 1–5 và bias controls.
+- [x] `reflection.md` có ba failure analyses và regression strategy.
+- [x] Đã copy `template.py` thành `solution/solution.py`.
+- [x] Exercise 3.4 và 3.5 chỉ làm nếu chọn bonus.
